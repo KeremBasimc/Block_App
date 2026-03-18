@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="description"
+        content="Block Blast! - Popüler bulmaca oyunu. Blokları yerleştir, satır ve sütunları temizle, en yüksek skoru yap!">
+    <title>Block Blast!</title>
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Block Blast!">
+    <link rel="manifest" href="/Block_App/manifest.json">
+    <link rel="apple-touch-icon" href="/Block_App/icons/icon-192.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header id="header">
+            <div class="logo">
+                <span class="logo-icon">💥</span>
+                <h1>Block <span class="highlight">Blast!</span></h1>
+            </div>
+        </header>
+
+        <!-- Score Panel -->
+        <div id="score-panel">
+            <div class="score-box current-score">
+                <span class="score-label">SKOR</span>
+                <span class="score-value" id="score">0</span>
+            </div>
+            <div class="score-box best-score">
+                <span class="score-label">EN İYİ</span>
+                <span class="score-value" id="best-score">0</span>
+            </div>
+        </div>
+
+        <!-- Combo Indicator -->
+        <div id="combo-indicator" class="hidden">
+            <span id="combo-text"></span>
+        </div>
+
+        <!-- Game Grid -->
+        <div id="grid-container">
+            <div id="grid"></div>
+        </div>
+
+        <!-- Piece Tray -->
+        <div id="piece-tray">
+            <div class="piece-slot" id="slot-0"></div>
+            <div class="piece-slot" id="slot-1"></div>
+            <div class="piece-slot" id="slot-2"></div>
+        </div>
+
+        <!-- Game Over Overlay -->
+        <div id="game-over-overlay" class="hidden">
+            <div class="game-over-card">
+                <div class="game-over-emoji">😵</div>
+                <h2>Oyun Bitti!</h2>
+                <p class="final-score-label">Skorun</p>
+                <p class="final-score" id="final-score">0</p>
+                <p class="best-score-label">En İyi: <span id="final-best-score">0</span></p>
+                <button id="restart-btn">🔄 Yeniden Oyna</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+    <script>
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/Block_App/service-worker.js')
+                    .then(reg => console.log('SW registered:', reg.scope))
+                    .catch(err => console.log('SW registration failed:', err));
+            });
+        }
+    </script>
+</body>
+
+</html>
