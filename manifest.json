@@ -35,6 +35,15 @@
             "purpose": "maskable"
         }
     ],
+    "screenshots": [
+        {
+            "src": "/Block_App/icons/screenshot.png",
+            "sizes": "1080x1920",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "Block Blast! gameplay"
+        }
+    ],
     "categories": ["games", "entertainment"],
     "lang": "tr",
     "dir": "ltr"
