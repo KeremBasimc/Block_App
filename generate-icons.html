@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head><title>Icon Generator</title></head>
+<body>
+<h2>Block Blast Icon Generator</h2>
+<p>Right-click each icon → "Save image as..." → save to <code>Block_App/icons/</code></p>
+<h3>icon-192.png (192x192)</h3>
+<canvas id="c192" width="192" height="192"></canvas>
+<h3>icon-512.png (512x512)</h3>
+<canvas id="c512" width="512" height="512"></canvas>
+<script>
+function drawIcon(canvas) {
+    const ctx = canvas.getContext('2d');
+    const s = canvas.width;
+    const u = s / 8;
+
+    // Background
+    ctx.fillStyle = '#0a0e1a';
+    ctx.beginPath();
+    ctx.roundRect(0, 0, s, s, s * 0.15);
+    ctx.fill();
+
+    // Glow
+    const grd = ctx.createRadialGradient(s/2, s/2, 0, s/2, s/2, s*0.5);
+    grd.addColorStop(0, 'rgba(102,126,234,0.25)');
+    grd.addColorStop(1, 'transparent');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, s, s);
+
+    // Block colors
+    const colors = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#9b59b6','#e67e22','#1abc9c','#e84393'];
+
+    // Draw blocks pattern
+    const blocks = [
+        [1,2],[1,3],[1,4],
+        [2,2],[2,4],[2,5],
+        [3,1],[3,2],[3,3],[3,4],
+        [4,2],[4,3],[4,5],
+        [5,3],[5,4],[5,5],
+    ];
+    const gap = u * 0.12;
+    blocks.forEach(([r,c], i) => {
+        const x = c * u + gap;
+        const y = r * u + gap;
+        const bw = u - gap * 2;
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.beginPath();
+        ctx.roundRect(x, y, bw, bw, bw * 0.15);
+        ctx.fill();
+    });
+}
+
+drawIcon(document.getElementById('c192'));
+drawIcon(document.getElementById('c512'));
+
+// Auto-download
+['c192','c512'].forEach(id => {
+    const canvas = document.getElementById(id);
+    const size = id.replace('c','');
+    const link = document.createElement('a');
+    link.download = `icon-${size}.png`;
+    link.href = canvas.toDataURL('image/png');
+
+    // Show download links
+    const p = document.createElement('p');
+    const a = document.createElement('a');
+    a.href = link.href;
+    a.download = link.download;
+    a.textContent = `⬇️ Download icon-${size}.png`;
+    a.style.fontSize = '20px';
+    p.appendChild(a);
+    canvas.parentElement.insertBefore(p, canvas.nextSibling);
+});
+</script>
+</body>
+</html>
