@@ -266,11 +266,11 @@
     function showCombo(combo, lines, boardClear) {
         comboIndicator.classList.remove('hidden');
         if (boardClear) {
-            comboText.textContent = '🌟 BOARD CLEAR! 🌟';
+            comboText.textContent = 'BOARD CLEAR!';
         } else if (combo > 1) {
-            comboText.textContent = `🔥 ${combo}x COMBO!`;
+            comboText.textContent = `${combo}x COMBO!`;
         } else {
-            comboText.textContent = `✨ ${lines} LINE${lines > 1 ? 'S' : ''}!`;
+            comboText.textContent = `${lines} LINE${lines > 1 ? 'S' : ''}!`;
         }
         // Force re-animate
         comboText.style.animation = 'none';
