@@ -1,11 +1,11 @@
-<!DOCTYPE html>
-<html lang="tr">
+﻿<!DOCTYPE html>
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="description"
-        content="Block Blast! - Popüler bulmaca oyunu. Blokları yerleştir, satır ve sütunları temizle, en yüksek skoru yap!">
+        content="Block Blast! - Popular puzzle game. Place blocks, clear rows and columns, get the highest score!">
     <title>Block Blast!</title>
     <meta name="theme-color" content="#667eea">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -24,7 +24,7 @@
         <!-- Header -->
         <header id="header">
             <div class="logo">
-                <span class="logo-icon">💥</span>
+                <span class="logo-icon">ğŸ’¥</span>
                 <h1>Block <span class="highlight">Blast!</span></h1>
             </div>
         </header>
@@ -32,11 +32,11 @@
         <!-- Score Panel -->
         <div id="score-panel">
             <div class="score-box current-score">
-                <span class="score-label">SKOR</span>
+                <span class="score-label">SCORE</span>
                 <span class="score-value" id="score">0</span>
             </div>
             <div class="score-box best-score">
-                <span class="score-label">EN İYİ</span>
+                <span class="score-label">BEST</span>
                 <span class="score-value" id="best-score">0</span>
             </div>
         </div>
@@ -61,20 +61,20 @@
         <!-- Game Over Overlay -->
         <div id="game-over-overlay" class="hidden">
             <div class="game-over-card">
-                <div class="game-over-emoji">😵</div>
-                <h2>Oyun Bitti!</h2>
-                <p class="final-score-label">Skorun</p>
+                <div class="game-over-emoji">ğŸ˜µ</div>
+                <h2>Game Over!</h2>
+                <p class="final-score-label">YOUR SCORE</p>
                 <p class="final-score" id="final-score">0</p>
-                <p class="best-score-label">En İyi: <span id="final-best-score">0</span></p>
-                <button id="restart-btn">🔄 Yeniden Oyna</button>
+                <p class="best-score-label">Best: <span id="final-best-score">0</span></p>
+                <button id="restart-btn">ğŸ”„ Play Again</button>
             </div>
         </div>
     </div>
 
     <script src="game.js"></script>
     <script>
-        // Register Service Worker for PWA
-        if ('serviceWorker' in navigator) {
+        // Register Service Worker for PWA (works on localhost, not file://)
+        if ('serviceWorker' in navigator && true) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/Block_App/service-worker.js')
                     .then(reg => console.log('SW registered:', reg.scope))

@@ -12,15 +12,9 @@
     const COMBO_MULTIPLIER = 1.5;
     const BOARD_CLEAR_BONUS = 500;
 
-    // ── Color Palettes — each palette is used until the board is fully cleared ──
+    // ── Color Palettes — classic Block Blast primary colors ──
     const COLOR_PALETTES = [
-        ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#9b59b6', '#e67e22', '#1abc9c', '#e84393'],
-        ['#f72585', '#b5179e', '#7209b7', '#560bad', '#480ca8', '#3a0ca3', '#3f37c9', '#4895ef'],
-        ['#ff595e', '#ffca3a', '#8ac926', '#1982c4', '#6a4c93', '#ff924c', '#36d399', '#f87171'],
-        ['#e63946', '#f4a261', '#2a9d8f', '#264653', '#e9c46a', '#f4845f', '#a8dadc', '#457b9d'],
-        ['#06d6a0', '#118ab2', '#ef476f', '#ffd166', '#073b4c', '#83c5be', '#e29578', '#6d6875'],
-        ['#c9184a', '#ff758f', '#ff7eb3', '#7b2cbf', '#5a189a', '#3c096c', '#e0aaff', '#48bfe3'],
-        ['#fb5607', '#ff006e', '#8338ec', '#3a86ff', '#ffbe0b', '#06d6a0', '#e63946', '#a7c957'],
+        ['#e8312a', '#f5a623', '#27ae60', '#2980e8', '#9b27af', '#e8312a', '#f5a623', '#27ae60'],
     ];
 
     // ── Piece Definitions ──
@@ -272,11 +266,11 @@
     function showCombo(combo, lines, boardClear) {
         comboIndicator.classList.remove('hidden');
         if (boardClear) {
-            comboText.textContent = '🌟 PANO TEMİZ! 🌟';
+            comboText.textContent = '🌟 BOARD CLEAR! 🌟';
         } else if (combo > 1) {
-            comboText.textContent = `🔥 ${combo}x KOMBO!`;
+            comboText.textContent = `🔥 ${combo}x COMBO!`;
         } else {
-            comboText.textContent = `✨ ${lines} SATIR!`;
+            comboText.textContent = `✨ ${lines} LINE${lines > 1 ? 'S' : ''}!`;
         }
         // Force re-animate
         comboText.style.animation = 'none';

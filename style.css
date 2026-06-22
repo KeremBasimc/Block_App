@@ -4,12 +4,12 @@
 
 :root {
     /* Color Palette */
-    --bg-primary: #0a0e1a;
-    --bg-secondary: #131929;
-    --bg-card: rgba(25, 32, 56, 0.85);
-    --bg-grid: #0d1220;
-    --cell-empty: rgba(255, 255, 255, 0.04);
-    --cell-border: rgba(255, 255, 255, 0.06);
+    --bg-primary: #000000;
+    --bg-secondary: #0d0d0d;
+    --bg-card: rgba(15, 15, 15, 0.95);
+    --bg-grid: #0a0a0a;
+    --cell-empty: rgba(255, 255, 255, 0.03);
+    --cell-border: rgba(255, 255, 255, 0.04);
     --text-primary: #f0f2f8;
     --text-secondary: #8892b0;
     --accent-1: #ff6b6b;
@@ -235,7 +235,7 @@ body {
     display: flex;
     justify-content: center;
     padding: 10px;
-    background: var(--bg-card);
+    background: #000000;
     border-radius: 16px;
     border: 1px solid rgba(255, 255, 255, 0.06);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -251,20 +251,22 @@ body {
 .cell {
     width: var(--cell-size);
     height: var(--cell-size);
-    background: var(--cell-empty);
-    border-radius: 6px;
-    border: 1px solid var(--cell-border);
-    transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    transition: background var(--transition-fast), box-shadow var(--transition-fast);
     position: relative;
 }
 
 .cell.filled {
-    border-color: rgba(255, 255, 255, 0.08);
+    border: none;
+    box-shadow:
+        inset 2px 3px 0px rgba(255, 255, 255, 0.35),
+        inset -2px -3px 0px rgba(0, 0, 0, 0.35);
 }
 
 .cell.preview {
     opacity: 0.5;
-    transform: scale(0.92);
     border-color: rgba(255, 255, 255, 0.2);
 }
 
@@ -279,39 +281,34 @@ body {
 
 @keyframes clearCell {
     0% {
-        transform: scale(1);
         opacity: 1;
+        filter: brightness(1);
     }
 
     50% {
-        transform: scale(1.15);
         opacity: 0.8;
-        filter: brightness(1.8);
+        filter: brightness(2);
     }
 
     100% {
-        transform: scale(0);
         opacity: 0;
+        filter: brightness(1);
     }
 }
 
 .cell.placed {
-    animation: placeBlock 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation: placeBlock 0.2s ease;
 }
 
 @keyframes placeBlock {
     0% {
-        transform: scale(0.5);
-        opacity: 0.5;
-    }
-
-    70% {
-        transform: scale(1.08);
+        opacity: 0.4;
+        filter: brightness(2);
     }
 
     100% {
-        transform: scale(1);
         opacity: 1;
+        filter: brightness(1);
     }
 }
 
@@ -364,17 +361,17 @@ body {
     display: grid;
     gap: 2px;
     cursor: grab;
-    transition: transform var(--transition-fast), filter var(--transition-fast);
+    transition: filter var(--transition-fast);
     touch-action: none;
 }
 
 .piece:hover {
-    transform: scale(1.08);
+    filter: brightness(1.2);
 }
 
 .piece:active {
     cursor: grabbing;
-    transform: scale(1.12);
+    filter: brightness(1.35);
 }
 
 .piece.used {
@@ -391,14 +388,15 @@ body {
 .piece-cell {
     width: var(--piece-cell-size);
     height: var(--piece-cell-size);
-    border-radius: 5px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 7px;
+    border: none;
+    box-shadow:
+        inset 2px 3px 0px rgba(255, 255, 255, 0.35),
+        inset -2px -3px 0px rgba(0, 0, 0, 0.35);
 }
 
 .piece-cell.empty-cell {
-    background: transparent !important;
-    border: none;
-    box-shadow: none;
+    visibility: hidden;
 }
 
 /* Dragging ghost */
@@ -414,7 +412,11 @@ body {
 .drag-ghost .piece-cell {
     width: var(--cell-size);
     height: var(--cell-size);
-    border-radius: 6px;
+    border-radius: 8px;
+    border: none;
+    box-shadow:
+        inset 2px 3px 0px rgba(255, 255, 255, 0.35),
+        inset -2px -3px 0px rgba(0, 0, 0, 0.35);
 }
 
 /* =========================================
@@ -552,16 +554,16 @@ body {
 @keyframes scorePop {
     0% {
         opacity: 1;
-        transform: translateY(0) scale(0.5);
+        transform: translateY(0);
     }
 
     30% {
-        transform: translateY(-15px) scale(1.1);
+        transform: translateY(-15px);
     }
 
     100% {
         opacity: 0;
-        transform: translateY(-60px) scale(0.8);
+        transform: translateY(-60px);
     }
 }
 
