@@ -1,4 +1,4 @@
-// Block Blast! — Service Worker (Offline Cache)
+// Block Blaster! — Service Worker (Offline Cache)
 const CACHE_NAME = 'block-blast-v5';
 const ASSETS = [
     '/Block_App/',

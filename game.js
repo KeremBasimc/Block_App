@@ -1,5 +1,5 @@
 /* =========================================
-   Block Blast! — Game Engine
+   Block Blaster! — Game Engine
    ========================================= */
 
 (function () {

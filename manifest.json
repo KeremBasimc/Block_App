@@ -1,7 +1,7 @@
 {
     "id": "/Block_App/",
-    "name": "Block Blast!",
-    "short_name": "Block Blast",
+    "name": "Block Blaster!",
+    "short_name": "Block Blaster",
     "description": "Popular puzzle game - Place blocks, clear lines, get the highest score!",
     "start_url": "/Block_App/index.html",
     "scope": "/Block_App/",
@@ -41,7 +41,7 @@
             "sizes": "1080x1920",
             "type": "image/png",
             "form_factor": "narrow",
-            "label": "Block Blast! gameplay"
+            "label": "Block Blaster! gameplay"
         }
     ],
     "categories": ["games", "entertainment"],
