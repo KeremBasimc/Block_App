@@ -20,7 +20,97 @@
 </head>
 
 <body>
-    <div id="app">
+
+    <!-- ⚙ Settings Button — always visible -->
+    <button id="settings-btn" aria-label="Settings">⚙</button>
+
+    <!-- ═══════════════════════════════════════
+         MAIN MENU
+    ═══════════════════════════════════════ -->
+    <div id="main-menu">
+        <!-- Floating decorative blocks -->
+        <div class="menu-float-blocks">
+            <div class="fb fb-1"></div>
+            <div class="fb fb-2"></div>
+            <div class="fb fb-3"></div>
+            <div class="fb fb-4"></div>
+            <div class="fb fb-5"></div>
+            <div class="fb fb-6"></div>
+            <div class="fb fb-7"></div>
+            <div class="fb fb-8"></div>
+            <div class="fb fb-9"></div>
+            <div class="fb fb-10"></div>
+        </div>
+
+        <div class="menu-inner">
+            <!-- Logo -->
+            <div class="menu-logo-wrap">
+                <div class="menu-blocks-icon">
+                    <div class="menu-block mb-1"></div>
+                    <div class="menu-block mb-2"></div>
+                    <div class="menu-block mb-3"></div>
+                    <div class="menu-block mb-4"></div>
+                </div>
+                <h1 class="menu-title">Block <span>Blaster!</span></h1>
+                <p class="menu-tagline">Place &nbsp;·&nbsp; Clear &nbsp;·&nbsp; Conquer</p>
+            </div>
+
+            <!-- Best Score -->
+            <div class="menu-best-card">
+                <div class="menu-best-label">BEST SCORE</div>
+                <div class="menu-best-value" id="menu-best-score">0</div>
+            </div>
+
+            <!-- Play Button -->
+            <button id="play-btn" class="play-btn">▶&nbsp;&nbsp;PLAY</button>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         SETTINGS PANEL
+    ═══════════════════════════════════════ -->
+    <div id="settings-panel" class="hidden">
+        <div class="settings-backdrop" id="settings-backdrop"></div>
+        <div class="settings-drawer" id="settings-drawer">
+            <div class="settings-head">
+                <h2>Settings</h2>
+                <button id="settings-close" aria-label="Close settings">✕</button>
+            </div>
+
+            <p class="settings-section-label">🔊 Audio</p>
+            <div class="setting-row">
+                <div class="setting-text">
+                    <span class="setting-name">Sound Effects</span>
+                    <span class="setting-desc">Blocks, clears &amp; combos</span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="toggle-sfx" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <p class="settings-section-label">📱 Gameplay</p>
+            <div class="setting-row">
+                <div class="setting-text">
+                    <span class="setting-name">Haptic Feedback</span>
+                    <span class="setting-desc">Vibration on key moments</span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="toggle-haptic" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="settings-footer">
+                <span class="settings-version">Block Blaster! v2.1</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         GAME SCREEN
+    ═══════════════════════════════════════ -->
+    <div id="app" class="hidden">
         <!-- Header -->
         <header id="header">
             <div class="logo">
@@ -73,7 +163,10 @@
                 <p class="final-score-label">YOUR SCORE</p>
                 <p class="final-score" id="final-score">0</p>
                 <p class="best-score-label">Best: <span id="final-best-score">0</span></p>
-                <button id="restart-btn">Play Again</button>
+                <div class="game-over-buttons">
+                    <button id="restart-btn">▶ Play Again</button>
+                    <button id="menu-btn">⌂ Menu</button>
+                </div>
             </div>
         </div>
     </div>

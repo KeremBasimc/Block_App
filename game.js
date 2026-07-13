@@ -13,6 +13,49 @@
     const BOARD_CLEAR_BONUS = 500;
     const AMAZING_BONUS = 1000;  // extra bonus shown with AMAZING!
 
+    // ── Settings (persisted to localStorage) ──
+    const settings = {
+        sfx:    localStorage.getItem('bb_sfx')    !== 'false',
+        haptic: localStorage.getItem('bb_haptic') !== 'false',
+    };
+
+    // ── Audio Engine (Web Audio API — no external files) ──
+    const AudioEngine = {
+        _ctx: null,
+        get ctx() {
+            if (!this._ctx) {
+                this._ctx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            return this._ctx;
+        },
+        _tone(freq, type, duration, vol = 0.25, delay = 0) {
+            if (!settings.sfx) return;
+            try {
+                const ctx = this.ctx;
+                const osc  = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+                gain.gain.setValueAtTime(0, ctx.currentTime + delay);
+                gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + delay + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + duration);
+                osc.start(ctx.currentTime + delay);
+                osc.stop(ctx.currentTime  + delay + duration + 0.05);
+            } catch (_) {}
+        },
+        playPlace()    { this._tone(280, 'sine', 0.08, 0.18); this._tone(420, 'sine', 0.06, 0.1, 0.04); },
+        playClear()    { [400, 540, 700, 900].forEach((f, i) => this._tone(f, 'sine', 0.14, 0.22, i * 0.07)); },
+        playAmazing()  { [523, 659, 784, 1047, 1319].forEach((f, i) => this._tone(f, 'sine', 0.55, 0.2, i * 0.05)); },
+        playGameOver() { [440, 370, 310, 220].forEach((f, i) => this._tone(f, 'sawtooth', 0.28, 0.14, i * 0.13)); },
+        playClick()    { this._tone(480, 'sine', 0.06, 0.12); },
+    };
+
+    function vibrate(pattern) {
+        if (settings.haptic && navigator.vibrate) navigator.vibrate(pattern);
+    }
+
     // ── Color Palettes — vibrant expanded palette ──
     const COLOR_PALETTES = [
         [
@@ -90,22 +133,37 @@
     let dragging = null;     // { pieceIndex, piece, ghost, offsetR, offsetC }
 
     // ── DOM ────────────────────────────────────
-    const gridEl = document.getElementById('grid');
-    const gridContainer = document.getElementById('grid-container');
-    const scoreEl = document.getElementById('score');
-    const bestScoreEl = document.getElementById('best-score');
-    const comboIndicator = document.getElementById('combo-indicator');
-    const comboText = document.getElementById('combo-text');
-    const amazingOverlay = document.getElementById('amazing-overlay');
+    // Game screen
+    const appEl           = document.getElementById('app');
+    const gridEl          = document.getElementById('grid');
+    const gridContainer   = document.getElementById('grid-container');
+    const scoreEl         = document.getElementById('score');
+    const bestScoreEl     = document.getElementById('best-score');
+    const comboIndicator  = document.getElementById('combo-indicator');
+    const comboText       = document.getElementById('combo-text');
+    const amazingOverlay  = document.getElementById('amazing-overlay');
     const gameOverOverlay = document.getElementById('game-over-overlay');
-    const finalScoreEl = document.getElementById('final-score');
-    const finalBestScoreEl = document.getElementById('final-best-score');
-    const restartBtn = document.getElementById('restart-btn');
+    const finalScoreEl    = document.getElementById('final-score');
+    const finalBestScoreEl= document.getElementById('final-best-score');
+    const restartBtn      = document.getElementById('restart-btn');
+    const menuBtn         = document.getElementById('menu-btn');
     const pieceSlots = [
         document.getElementById('slot-0'),
         document.getElementById('slot-1'),
         document.getElementById('slot-2'),
     ];
+    // Main menu
+    const mainMenuEl      = document.getElementById('main-menu');
+    const menuBestEl      = document.getElementById('menu-best-score');
+    const playBtn         = document.getElementById('play-btn');
+    // Settings
+    const settingsBtn     = document.getElementById('settings-btn');
+    const settingsPanel   = document.getElementById('settings-panel');
+    const settingsBackdrop= document.getElementById('settings-backdrop');
+    const settingsDrawer  = document.getElementById('settings-drawer');
+    const settingsClose   = document.getElementById('settings-close');
+    const toggleSfx       = document.getElementById('toggle-sfx');
+    const toggleHaptic    = document.getElementById('toggle-haptic');
 
     let cells = []; // 2D array of DOM cell elements
 
@@ -200,6 +258,8 @@
 
         score += piece.cells.length * POINTS_PER_BLOCK;
         updateScore();
+        AudioEngine.playPlace();
+        vibrate(12);
     }
 
     // ── Line Clearing ──────────────────────────
@@ -232,6 +292,8 @@
             linePoints = Math.floor(linePoints * Math.pow(COMBO_MULTIPLIER, comboCount - 1));
         }
         score += linePoints;
+        AudioEngine.playClear();
+        vibrate([25, 15, 25]);
 
         // Gather cells to clear (unique)
         const toClear = new Set();
@@ -303,6 +365,8 @@
     function showAmazing() {
         // Show AMAZING overlay with full-screen sparkle effect
         amazingOverlay.classList.remove('hidden');
+        AudioEngine.playAmazing();
+        vibrate([60, 30, 60, 30, 120]);
         // Fire a burst of confetti-style particles across the screen
         for (let i = 0; i < 60; i++) {
             setTimeout(() => {
@@ -677,6 +741,8 @@
         finalScoreEl.textContent = score;
         finalBestScoreEl.textContent = bestScore;
         gameOverOverlay.classList.remove('hidden');
+        AudioEngine.playGameOver();
+        vibrate([80, 40, 160]);
     }
 
     function restart() {
@@ -689,17 +755,80 @@
         spawnPieceSet();
     }
 
-    // ── Init ───────────────────────────────────
-    function init() {
+    // ── Navigation ──────────────────────────────
+    function showMainMenu() {
+        appEl.classList.add('hidden');
+        mainMenuEl.classList.remove('hidden', 'hiding');
+        menuBestEl.textContent = bestScore;
+    }
+
+    function startGame() {
+        AudioEngine.playClick();
+        vibrate(20);
+        mainMenuEl.classList.add('hiding');
+        setTimeout(() => {
+            mainMenuEl.classList.add('hidden');
+            appEl.classList.remove('hidden');
+        }, 420);
+        score = 0;
+        comboCount = 0;
         currentPaletteIndex = randomInt(0, COLOR_PALETTES.length - 1);
         initGrid();
         updateScore();
         spawnPieceSet();
+    }
 
+    function openSettings() {
+        settingsBtn.style.transform = 'rotate(90deg)';
+        setTimeout(() => { settingsBtn.style.transform = ''; }, 350);
+        // Reset drawer animation
+        settingsDrawer.style.animation = '';
+        settingsBackdrop.style.animation = '';
+        void settingsDrawer.offsetHeight; // reflow
+        settingsPanel.classList.remove('hidden');
+        AudioEngine.playClick();
+    }
+
+    function closeSettings() {
+        settingsDrawer.style.animation  = 'drawerSlideDown 0.32s ease forwards';
+        settingsBackdrop.style.animation = 'backdropOut 0.32s ease forwards';
+        setTimeout(() => {
+            settingsPanel.classList.add('hidden');
+            settingsDrawer.style.animation  = '';
+            settingsBackdrop.style.animation = '';
+        }, 300);
+    }
+
+    // ── Init ───────────────────────────────────
+    function init() {
+        // Buttons
         restartBtn.addEventListener('click', restart);
+        playBtn.addEventListener('click', startGame);
+        settingsBtn.addEventListener('click', openSettings);
+        settingsClose.addEventListener('click', closeSettings);
+        settingsBackdrop.addEventListener('click', closeSettings);
+        menuBtn.addEventListener('click', () => {
+            gameOverOverlay.classList.add('hidden');
+            showMainMenu();
+        });
+
+        // Settings toggles — init from saved state
+        toggleSfx.checked    = settings.sfx;
+        toggleHaptic.checked = settings.haptic;
+        toggleSfx.addEventListener('change', () => {
+            settings.sfx = toggleSfx.checked;
+            localStorage.setItem('bb_sfx', String(settings.sfx));
+        });
+        toggleHaptic.addEventListener('change', () => {
+            settings.haptic = toggleHaptic.checked;
+            localStorage.setItem('bb_haptic', String(settings.haptic));
+        });
 
         // Prevent context menu on long-press (mobile)
         document.addEventListener('contextmenu', e => e.preventDefault());
+
+        // Show main menu on launch
+        showMainMenu();
     }
 
     init();
