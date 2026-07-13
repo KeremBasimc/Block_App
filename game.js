@@ -11,10 +11,28 @@
     const LINE_BASE = 100;
     const COMBO_MULTIPLIER = 1.5;
     const BOARD_CLEAR_BONUS = 500;
+    const AMAZING_BONUS = 1000;  // extra bonus shown with AMAZING!
 
-    // ── Color Palettes — classic Block Blast primary colors ──
+    // ── Color Palettes — vibrant expanded palette ──
     const COLOR_PALETTES = [
-        ['#e8312a', '#f5a623', '#27ae60', '#2980e8', '#9b27af', '#e8312a', '#f5a623', '#27ae60'],
+        [
+            '#ff4757', // vivid red
+            '#ff6b35', // deep orange
+            '#ffa502', // amber
+            '#ffdd59', // golden yellow
+            '#2ed573', // emerald green
+            '#1e90ff', // dodger blue
+            '#7bed9f', // mint green
+            '#eccc68', // warm yellow
+            '#ff6b81', // rose pink
+            '#a29bfe', // lavender
+            '#fd79a8', // hot pink
+            '#00cec9', // teal
+            '#6c5ce7', // purple
+            '#74b9ff', // sky blue
+            '#55efc4', // aquamarine
+            '#e17055', // coral
+        ],
     ];
 
     // ── Piece Definitions ──
@@ -78,6 +96,7 @@
     const bestScoreEl = document.getElementById('best-score');
     const comboIndicator = document.getElementById('combo-indicator');
     const comboText = document.getElementById('combo-text');
+    const amazingOverlay = document.getElementById('amazing-overlay');
     const gameOverOverlay = document.getElementById('game-over-overlay');
     const finalScoreEl = document.getElementById('final-score');
     const finalBestScoreEl = document.getElementById('final-best-score');
@@ -227,6 +246,10 @@
         for (const key of toClear) {
             const [r, c] = key.split(',').map(Number);
             cells[r][c].classList.add('clearing');
+            // Spawn particle burst on each clearing cell
+            const cellEl = cells[r][c];
+            const rect = cellEl.getBoundingClientRect();
+            spawnParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, grid[r][c]);
         }
 
         // Show combo text
@@ -248,14 +271,14 @@
                 cells[r][c].style.background = '';
             }
 
-            // Check if entire board is now empty → change palette
+            // Check if entire board is now empty → AMAZING!
             const boardEmpty = grid.every(row => row.every(cell => cell === null));
             if (boardEmpty) {
                 nextPalette();
-                score += BOARD_CLEAR_BONUS;
-                showCombo(0, 0, true);
+                score += BOARD_CLEAR_BONUS + AMAZING_BONUS;
+                showAmazing();
                 gridContainer.classList.add('board-clear-flash');
-                setTimeout(() => gridContainer.classList.remove('board-clear-flash'), 650);
+                setTimeout(() => gridContainer.classList.remove('board-clear-flash'), 900);
             }
 
             updateScore();
@@ -263,11 +286,9 @@
         }, 420);
     }
 
-    function showCombo(combo, lines, boardClear) {
+    function showCombo(combo, lines) {
         comboIndicator.classList.remove('hidden');
-        if (boardClear) {
-            comboText.textContent = 'BOARD CLEAR!';
-        } else if (combo > 1) {
+        if (combo > 1) {
             comboText.textContent = `${combo}x COMBO!`;
         } else {
             comboText.textContent = `${lines} LINE${lines > 1 ? 'S' : ''}!`;
@@ -277,6 +298,67 @@
         void comboText.offsetHeight;
         comboText.style.animation = '';
         setTimeout(() => comboIndicator.classList.add('hidden'), 900);
+    }
+
+    function showAmazing() {
+        // Show AMAZING overlay with full-screen sparkle effect
+        amazingOverlay.classList.remove('hidden');
+        // Fire a burst of confetti-style particles across the screen
+        for (let i = 0; i < 60; i++) {
+            setTimeout(() => {
+                const x = Math.random() * window.innerWidth;
+                const y = Math.random() * window.innerHeight * 0.7;
+                const pal = getPalette();
+                const color = pal[Math.floor(Math.random() * pal.length)];
+                spawnConfetti(x, y, color);
+            }, i * 30);
+        }
+        setTimeout(() => amazingOverlay.classList.add('hidden'), 2200);
+    }
+
+    // ── Particle Effects ───────────────────────
+    function spawnParticles(x, y, color) {
+        const count = 6;
+        for (let i = 0; i < count; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            const angle = (i / count) * Math.PI * 2;
+            const dist = 28 + Math.random() * 22;
+            const tx = Math.cos(angle) * dist;
+            const ty = Math.sin(angle) * dist;
+            p.style.cssText = `
+                left: ${x}px;
+                top: ${y}px;
+                background: ${color || '#ffd93d'};
+                --tx: ${tx}px;
+                --ty: ${ty}px;
+            `;
+            document.body.appendChild(p);
+            setTimeout(() => p.remove(), 600);
+        }
+    }
+
+    function spawnConfetti(x, y, color) {
+        const p = document.createElement('div');
+        p.className = 'confetti-piece';
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 60 + Math.random() * 120;
+        const tx = Math.cos(angle) * dist;
+        const ty = Math.sin(angle) * dist - 80;
+        const rotate = (Math.random() - 0.5) * 720;
+        p.style.cssText = `
+            left: ${x}px;
+            top: ${y}px;
+            background: ${color};
+            --tx: ${tx}px;
+            --ty: ${ty}px;
+            --rot: ${rotate}deg;
+            width: ${6 + Math.random() * 8}px;
+            height: ${6 + Math.random() * 8}px;
+            border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+        `;
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 1800);
     }
 
     function showScorePop(points) {
