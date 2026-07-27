@@ -164,6 +164,7 @@
     const settingsClose   = document.getElementById('settings-close');
     const toggleSfx       = document.getElementById('toggle-sfx');
     const toggleHaptic    = document.getElementById('toggle-haptic');
+    const settingsMenuBtn = document.getElementById('settings-menu-btn');
 
     let cells = []; // 2D array of DOM cell elements
 
@@ -807,6 +808,12 @@
         settingsBtn.addEventListener('click', openSettings);
         settingsClose.addEventListener('click', closeSettings);
         settingsBackdrop.addEventListener('click', closeSettings);
+        settingsMenuBtn.addEventListener('click', () => {
+            AudioEngine.playClick();
+            vibrate(15);
+            showMainMenu();   // swap game screen -> main menu behind the drawer
+            closeSettings();  // then slide the settings drawer away
+        });
         menuBtn.addEventListener('click', () => {
             gameOverOverlay.classList.add('hidden');
             showMainMenu();
