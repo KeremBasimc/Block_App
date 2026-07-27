@@ -43,6 +43,12 @@
     box-sizing: border-box;
 }
 
+/* Disable browser pull-to-refresh & overscroll bounce (prevents accidental
+   page reload that would wipe the current game) */
+html {
+    overscroll-behavior: none;
+}
+
 body {
     font-family: 'Outfit', sans-serif;
     background: var(--bg-primary);
@@ -52,6 +58,7 @@ body {
     justify-content: center;
     align-items: flex-start;
     overflow-x: hidden;
+    overscroll-behavior: none;
     -webkit-user-select: none;
     user-select: none;
     background-image:
