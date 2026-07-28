@@ -967,8 +967,10 @@ body {
     font-family: 'Outfit', sans-serif;
     font-size: 1.35rem;
     font-weight: 900;
-    letter-spacing: 5px;
-    padding: 18px 68px;
+    letter-spacing: 4px;
+    padding: 18px 52px;
+    max-width: 100%;
+    white-space: nowrap;
     border: none;
     border-radius: 50px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
@@ -1241,4 +1243,181 @@ body {
 }
 
 #menu-btn:hover  { background: rgba(255, 255, 255, 0.14); transform: scale(1.03); }
-#menu-btn:active { transform: scale(0.96); }
+#menu-btn:active { transform: scale(0.96); }
+
+/* =========================================
+   Coins, daily reward, revive, praise, new-best
+   ========================================= */
+
+/* Coins pill on main menu */
+.menu-coins-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    border-radius: 50px;
+    background: rgba(255, 217, 61, 0.08);
+    border: 1px solid rgba(255, 217, 61, 0.28);
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: #ffe27a;
+    margin-top: -12px;
+}
+.menu-coins-pill .coin-icon {
+    color: #ffd93d;
+    font-size: 1.1rem;
+    filter: drop-shadow(0 0 6px rgba(255, 217, 61, 0.6));
+}
+.menu-coins-pill .menu-coins-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: rgba(255, 226, 122, 0.6);
+    text-transform: uppercase;
+}
+
+/* "Start new game" text button under CONTINUE */
+.new-game-link {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-decoration: underline;
+    cursor: pointer;
+    margin-top: -16px;
+    padding: 6px;
+}
+.new-game-link:hover { color: rgba(255, 255, 255, 0.8); }
+.new-game-link.hidden { display: none; }
+
+/* Escalating praise tiers (bigger / hotter) */
+#combo-text.praise-mid { font-size: 3rem; }
+#combo-text.praise-hi  {
+    font-size: 3.6rem;
+    background: linear-gradient(135deg, #ffd93d, #ff6b6b, #6c5ce7);
+    -webkit-background-clip: text;
+    background-clip: text;
+    filter: drop-shadow(0 0 26px rgba(255, 107, 107, 0.75));
+}
+
+/* "NEW BEST!" flying banner */
+.new-best-pop {
+    position: fixed;
+    top: 26%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 130;
+    pointer-events: none;
+    font-size: 2rem;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: #fff;
+    background: linear-gradient(135deg, #ffd93d, #ff9f43);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 18px rgba(255, 200, 60, 0.7));
+    animation: newBestPop 1.6s ease forwards;
+}
+@keyframes newBestPop {
+    0%   { opacity: 0; transform: translateX(-50%) translateY(20px) scale(0.6); }
+    18%  { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.15); }
+    32%  { transform: translateX(-50%) translateY(0) scale(1); }
+    75%  { opacity: 1; }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-30px) scale(1); }
+}
+
+/* Coins earned line on game-over card */
+.coins-earned {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #ffe27a;
+    margin: 6px 0 14px;
+    min-height: 1.1em;
+}
+
+/* Revive button on game over */
+.revive-btn {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 800;
+    padding: 14px 30px;
+    width: 100%;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #ff6b6b, #ff9f43);
+    color: #fff;
+    cursor: pointer;
+    margin-bottom: 14px;
+    box-shadow: 0 8px 26px rgba(255, 107, 107, 0.4);
+    transition: transform var(--transition-fast), box-shadow 0.2s ease;
+}
+.revive-btn:hover  { transform: scale(1.03); }
+.revive-btn:active { transform: scale(0.97); }
+.revive-btn.hidden { display: none; }
+
+/* Daily reward popup */
+#daily-popup {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(5, 8, 18, 0.72);
+    backdrop-filter: blur(6px);
+}
+#daily-popup.hidden { display: none; }
+.daily-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 217, 61, 0.25);
+    border-radius: 24px;
+    padding: 32px 34px;
+    text-align: center;
+    max-width: 300px;
+    width: 82%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 70px rgba(255, 200, 60, 0.12);
+    animation: cardSlideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.daily-emoji { font-size: 3.2rem; margin-bottom: 8px; }
+.daily-card h2 {
+    font-size: 1.5rem;
+    font-weight: 900;
+    margin-bottom: 10px;
+    background: var(--gradient-main);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.daily-streak {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+.daily-reward-amt {
+    font-size: 1.9rem;
+    font-weight: 900;
+    color: #ffe27a;
+    margin-bottom: 20px;
+    filter: drop-shadow(0 0 14px rgba(255, 217, 61, 0.5));
+}
+#daily-close {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 800;
+    padding: 13px 40px;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    cursor: pointer;
+    transition: transform var(--transition-fast);
+}
+#daily-close:hover  { transform: scale(1.04); }
+#daily-close:active { transform: scale(0.96); }

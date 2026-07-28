@@ -13,6 +13,18 @@
     const BOARD_CLEAR_BONUS = 500;
     const AMAZING_BONUS = 1000;  // extra bonus shown with AMAZING!
 
+    // ── Economy / progression tuning ──
+    const SAVE_KEY = 'bb_savegame';
+    const REVIVE_COST = 50;         // coins to revive once per game
+    const COINS_PER_SCORE = 100;    // 1 coin earned per this many points
+    const DAILY_REWARD = 50;        // coins granted on daily check-in
+
+    // Escalating praise words (index by "intensity")
+    const PRAISE_WORDS = [
+        'NICE!', 'GOOD!', 'GREAT!', 'SUPER!', 'AWESOME!',
+        'EXCELLENT!', 'FANTASTIC!', 'INCREDIBLE!', 'UNBELIEVABLE!',
+    ];
+
     // ── Settings (persisted to localStorage) ──
     const settings = {
         sfx:    localStorage.getItem('bb_sfx')    !== 'false',
@@ -132,6 +144,13 @@
     let currentPaletteIndex = 0;
     let dragging = null;     // { pieceIndex, piece, ghost, offsetR, offsetC }
 
+    // ── Progression state ──
+    let coins = parseInt(localStorage.getItem('bb_coins') || '0', 10);
+    let reviveUsed = false;              // one revive per game
+    let bestAtGameStart = bestScore;     // for the "New Best!" celebration
+    let newBestCelebrated = false;
+    let coinsAwardedThisGame = 0;        // avoid double-awarding after a revive
+
     // ── DOM ────────────────────────────────────
     // Game screen
     const appEl           = document.getElementById('app');
@@ -155,7 +174,17 @@
     // Main menu
     const mainMenuEl      = document.getElementById('main-menu');
     const menuBestEl      = document.getElementById('menu-best-score');
+    const menuCoinsEl     = document.getElementById('menu-coins');
     const playBtn         = document.getElementById('play-btn');
+    const newGameLink     = document.getElementById('new-game-link');
+    // Game over extras
+    const reviveBtn       = document.getElementById('revive-btn');
+    const coinsEarnedEl   = document.getElementById('coins-earned');
+    // Daily reward popup
+    const dailyPopup      = document.getElementById('daily-popup');
+    const dailyStreakEl   = document.getElementById('daily-streak');
+    const dailyRewardEl   = document.getElementById('daily-reward-amt');
+    const dailyCloseBtn   = document.getElementById('daily-close');
     // Settings
     const settingsBtn     = document.getElementById('settings-btn');
     const settingsPanel   = document.getElementById('settings-panel');
@@ -184,6 +213,42 @@
 
     function nextPalette() {
         currentPaletteIndex = (currentPaletteIndex + 1) % COLOR_PALETTES.length;
+    }
+
+    // ── Persistence (auto-save & resume) ───────
+    function persist() {
+        try {
+            localStorage.setItem(SAVE_KEY, JSON.stringify({
+                grid,
+                score,
+                comboCount,
+                currentPaletteIndex,
+                pieces: currentPieces,
+                reviveUsed,
+                coinsAwardedThisGame,
+            }));
+        } catch (_) {}
+    }
+
+    function getSave() {
+        try { return JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); }
+        catch (_) { return null; }
+    }
+
+    function hasSave() {
+        const s = getSave();
+        return !!(s && Array.isArray(s.grid) && Array.isArray(s.pieces)
+                  && s.pieces.some(p => p));
+    }
+
+    function clearSave() {
+        try { localStorage.removeItem(SAVE_KEY); } catch (_) {}
+    }
+
+    // ── Coins ──────────────────────────────────
+    function saveCoins() {
+        try { localStorage.setItem('bb_coins', String(coins)); } catch (_) {}
+        if (menuCoinsEl) menuCoinsEl.textContent = coins;
     }
 
     // ── Grid Logic ─────────────────────────────
@@ -315,11 +380,11 @@
             spawnParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, grid[r][c]);
         }
 
-        // Show combo text
-        if (comboCount > 1) {
-            showCombo(comboCount, totalLines);
-        } else if (totalLines >= 2) {
-            showCombo(0, totalLines);
+        // Show escalating praise word on combos or multi-line clears
+        const intensity = comboCount + (totalLines - 1);
+        if (comboCount > 1 || totalLines >= 2) {
+            showPraise(intensity, comboCount);
+            if (intensity >= 6) AudioEngine.playAmazing();
         }
 
         // Show score pop near the grid
@@ -349,18 +414,34 @@
         }, 420);
     }
 
-    function showCombo(combo, lines) {
+    function praiseWord(intensity) {
+        const i = Math.max(0, Math.min(intensity - 1, PRAISE_WORDS.length - 1));
+        return PRAISE_WORDS[i];
+    }
+
+    function showPraise(intensity, combo) {
         comboIndicator.classList.remove('hidden');
-        if (combo > 1) {
-            comboText.textContent = `${combo}x COMBO!`;
-        } else {
-            comboText.textContent = `${lines} LINE${lines > 1 ? 'S' : ''}!`;
-        }
+        const word = praiseWord(intensity);
+        comboText.textContent = combo > 1 ? `${word}  x${combo}` : word;
+        // Bigger / hotter styling as intensity climbs
+        comboText.classList.remove('praise-mid', 'praise-hi');
+        if (intensity >= 5)      comboText.classList.add('praise-hi');
+        else if (intensity >= 3) comboText.classList.add('praise-mid');
         // Force re-animate
         comboText.style.animation = 'none';
         void comboText.offsetHeight;
         comboText.style.animation = '';
-        setTimeout(() => comboIndicator.classList.add('hidden'), 900);
+        setTimeout(() => comboIndicator.classList.add('hidden'), 950);
+    }
+
+    function showNewBest() {
+        const pop = document.createElement('div');
+        pop.className = 'new-best-pop';
+        pop.textContent = 'NEW BEST!';
+        document.body.appendChild(pop);
+        AudioEngine.playAmazing();
+        vibrate([30, 20, 60]);
+        setTimeout(() => pop.remove(), 1600);
     }
 
     function showAmazing() {
@@ -445,21 +526,42 @@
             localStorage.setItem('blockblast_best', bestScore);
         }
         bestScoreEl.textContent = bestScore;
+        // Celebrate the first time this game beats the previous best score
+        if (!newBestCelebrated && bestAtGameStart > 0 && score > bestAtGameStart) {
+            newBestCelebrated = true;
+            showNewBest();
+        }
     }
 
-    // ── Piece Generation ───────────────────────
+    // ── Piece Generation (smart / fair) ────────
+    function boardFillRatio() {
+        let filled = 0;
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) if (grid[r][c]) filled++;
+        }
+        return filled / (GRID_SIZE * GRID_SIZE);
+    }
+
+    // Bias toward smaller pieces as the board fills up, so the player rarely
+    // gets a big piece that cannot possibly fit — feels fair, not random.
     function generatePiece() {
-        const template = PIECE_TEMPLATES[randomInt(0, PIECE_TEMPLATES.length - 1)];
-        return {
-            ...template,
-            color: randomColor(),
-        };
+        const fill = boardFillRatio();
+        let pool = PIECE_TEMPLATES;
+        if (fill > 0.62)      pool = PIECE_TEMPLATES.filter(t => t.cells.length <= 3);
+        else if (fill > 0.42) pool = PIECE_TEMPLATES.filter(t => t.cells.length <= 4);
+        const template = pool[randomInt(0, pool.length - 1)];
+        return { name: template.name, cells: template.cells, color: randomColor() };
     }
 
     function spawnPieceSet() {
-        for (let i = 0; i < 3; i++) {
-            currentPieces[i] = generatePiece();
+        // Retry until at least one piece in the set is placeable on the current
+        // board (prevents cheap, instant dead-end sets). Falls back after N tries.
+        let set;
+        for (let attempt = 0; attempt < 60; attempt++) {
+            set = [generatePiece(), generatePiece(), generatePiece()];
+            if (set.some(p => canPlaceAnywhere(p))) break;
         }
+        currentPieces = set;
         renderPieces();
     }
 
@@ -608,11 +710,13 @@
             if (currentPieces.every(p => p === null)) {
                 setTimeout(() => {
                     spawnPieceSet();
+                    persist();
                     checkGameOver();
                 }, 480);
             } else {
                 setTimeout(() => {
                     updatePiecePlayability();
+                    persist();
                     checkGameOver();
                 }, 480);
             }
@@ -741,42 +845,170 @@
     function showGameOver() {
         finalScoreEl.textContent = score;
         finalBestScoreEl.textContent = bestScore;
+
+        // Award coins for this run (only the not-yet-awarded portion)
+        const earnedTotal = Math.floor(score / COINS_PER_SCORE);
+        const delta = Math.max(0, earnedTotal - coinsAwardedThisGame);
+        if (delta > 0) {
+            coins += delta;
+            coinsAwardedThisGame += delta;
+            saveCoins();
+        }
+        coinsEarnedEl.textContent = delta > 0 ? `+${delta} coins` : '';
+
+        // Offer a revive (once per game, if affordable). Ad-ready hook below.
+        reviveBtn.textContent = `♥ Revive – ${REVIVE_COST} coins`;
+        reviveBtn.classList.toggle('hidden', reviveUsed || coins < REVIVE_COST);
+
+        clearSave(); // game is finished — no resume unless the player revives
         gameOverOverlay.classList.remove('hidden');
         AudioEngine.playGameOver();
         vibrate([80, 40, 160]);
+    }
+
+    // Revive: spend coins (later: swap for a rewarded ad) to clear space and
+    // keep the current run going. Limited to once per game.
+    function requestRevive() {
+        if (reviveUsed || coins < REVIVE_COST) return;
+        coins -= REVIVE_COST;
+        saveCoins();
+        reviveUsed = true;
+        doRevive();
+    }
+
+    function doRevive() {
+        AudioEngine.playClick();
+        vibrate([20, 20, 40]);
+        gameOverOverlay.classList.add('hidden');
+        comboCount = 0;
+
+        // Clear the bottom 4 rows to free up room
+        for (let r = GRID_SIZE - 4; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) grid[r][c] = null;
+        }
+        renderGrid();
+
+        // Safety net: if the current pieces still can't be placed, wipe the board
+        const playablePieces = currentPieces.filter(p => p !== null);
+        if (!playablePieces.some(p => canPlaceAnywhere(p))) {
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) grid[r][c] = null;
+            }
+            renderGrid();
+        }
+
+        updatePiecePlayability();
+        persist();
     }
 
     function restart() {
         gameOverOverlay.classList.add('hidden');
         score = 0;
         comboCount = 0;
+        reviveUsed = false;
+        coinsAwardedThisGame = 0;
+        bestAtGameStart = bestScore;
+        newBestCelebrated = false;
         currentPaletteIndex = randomInt(0, COLOR_PALETTES.length - 1);
         initGrid();
         updateScore();
         spawnPieceSet();
+        persist();
     }
 
     // ── Navigation ──────────────────────────────
     function showMainMenu() {
         appEl.classList.add('hidden');
+        gameOverOverlay.classList.add('hidden');
         mainMenuEl.classList.remove('hidden', 'hiding');
         menuBestEl.textContent = bestScore;
+        if (menuCoinsEl) menuCoinsEl.textContent = coins;
+        // Show CONTINUE + "New Game" when a saved game exists
+        const resume = hasSave();
+        playBtn.innerHTML = resume ? '▶&nbsp;&nbsp;CONTINUE' : '▶&nbsp;&nbsp;PLAY';
+        newGameLink.classList.toggle('hidden', !resume);
     }
 
-    function startGame() {
-        AudioEngine.playClick();
-        vibrate(20);
+    function swapMenuToGame() {
         mainMenuEl.classList.add('hiding');
         setTimeout(() => {
             mainMenuEl.classList.add('hidden');
             appEl.classList.remove('hidden');
         }, 420);
+    }
+
+    function startGame() {
+        AudioEngine.playClick();
+        vibrate(20);
+        clearSave();
+        swapMenuToGame();
         score = 0;
         comboCount = 0;
+        reviveUsed = false;
+        coinsAwardedThisGame = 0;
+        bestAtGameStart = bestScore;
+        newBestCelebrated = false;
         currentPaletteIndex = randomInt(0, COLOR_PALETTES.length - 1);
         initGrid();
         updateScore();
         spawnPieceSet();
+        persist();
+    }
+
+    // Resume a previously auto-saved in-progress game
+    function resumeSavedGame() {
+        const s = getSave();
+        if (!s) { startGame(); return; }
+        AudioEngine.playClick();
+        vibrate(20);
+        swapMenuToGame();
+
+        score = s.score || 0;
+        comboCount = s.comboCount || 0;
+        currentPaletteIndex = s.currentPaletteIndex || 0;
+        reviveUsed = !!s.reviveUsed;
+        coinsAwardedThisGame = s.coinsAwardedThisGame || 0;
+        bestAtGameStart = bestScore;
+        newBestCelebrated = false;
+
+        initGrid();
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                grid[r][c] = (s.grid[r] && s.grid[r][c]) ? s.grid[r][c] : null;
+            }
+        }
+        renderGrid();
+        currentPieces = s.pieces.map(p =>
+            p ? { name: p.name, cells: p.cells, color: p.color } : null);
+        renderPieces();
+        updateScore();
+        checkGameOver();
+    }
+
+    // ── Daily reward ───────────────────────────
+    function dayString(ts) {
+        const d = new Date(ts);
+        return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    }
+
+    function checkDailyReward() {
+        const today = dayString(Date.now());
+        const last = localStorage.getItem('bb_daily_last');
+        if (last === today) return; // already claimed today
+
+        const yesterday = dayString(Date.now() - 86400000);
+        let streak = parseInt(localStorage.getItem('bb_daily_streak') || '0', 10);
+        streak = (last === yesterday) ? streak + 1 : 1;
+
+        const reward = DAILY_REWARD;
+        coins += reward;
+        saveCoins();
+        localStorage.setItem('bb_daily_streak', String(streak));
+        localStorage.setItem('bb_daily_last', today);
+
+        dailyStreakEl.textContent = `Day ${streak} streak`;
+        dailyRewardEl.textContent = `+${reward} coins`;
+        dailyPopup.classList.remove('hidden');
     }
 
     function openSettings() {
@@ -804,7 +1036,15 @@
     function init() {
         // Buttons
         restartBtn.addEventListener('click', restart);
-        playBtn.addEventListener('click', startGame);
+        playBtn.addEventListener('click', () => {
+            if (hasSave()) resumeSavedGame(); else startGame();
+        });
+        newGameLink.addEventListener('click', () => { clearSave(); startGame(); });
+        reviveBtn.addEventListener('click', requestRevive);
+        dailyCloseBtn.addEventListener('click', () => {
+            dailyPopup.classList.add('hidden');
+            AudioEngine.playClick();
+        });
         settingsBtn.addEventListener('click', openSettings);
         settingsClose.addEventListener('click', closeSettings);
         settingsBackdrop.addEventListener('click', closeSettings);
@@ -834,8 +1074,9 @@
         // Prevent context menu on long-press (mobile)
         document.addEventListener('contextmenu', e => e.preventDefault());
 
-        // Show main menu on launch
+        // Show main menu on launch, then run the daily check-in
         showMainMenu();
+        checkDailyReward();
     }
 
     init();
